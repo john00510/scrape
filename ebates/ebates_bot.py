@@ -1,8 +1,11 @@
+#!/usr/bin/python
+
 import requests
 from pymongo import MongoClient
 from lxml import html
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from datetime import datetime
 import time
 
 def spider(url):
@@ -20,7 +23,7 @@ def sel_spider(url):
     time.sleep(5)
     return driver
 
-def double_cash_back(collection):
+def double_cash_back(collection, file_h):
     url = 'https://www.ebates.com/athleisure-deals.htm'
     response = spider(url)
     data = html.fromstring(response.text)
@@ -29,20 +32,24 @@ def double_cash_back(collection):
         item['url'] = e.xpath('./@href')[0].strip('/')
         item['cashback'] = e.xpath('./span/text()')[1].strip().split(' ')[0]
         collection.insert(item)
-        print item
+        line = item['url'] + ',' + item['cashback'] + '\n'
+        file_h.write(line)
+        print line.strip()
 
-def hot_deals(collection):
+def hot_deals(collection, file_h):
     url = 'https://www.ebates.com/deals.htm'
     response = spider(url)
     data = html.fromstring(response.text)
     for e in data.xpath('.//div[@id="coupons"]/div[@class="coupon-blk logo-blk blk border-b pad-30"]'):
         item = dict()
         item['url'] = e.xpath('./div[@class="merchlogo flt"]/a/@href')[0].strip('/')
-        item['cashback'] = e.xpath('./ul/li/span/text()')[1].split('Cash')[0].strip().strip('+').strip()
+        item['cashback'] = e.xpath('./ul/li/span/text()')[1].split('Cash')[0].strip().strip('+').replace('Up to', '').strip()
         collection.insert(item)
-        print item
+        line = item['url'] + ',' + item['cashback'] + '\n'
+        file_h.write(line)
+        print line.strip()
 
-def luxury(collection):
+def luxury(collection, file_h):
     url = 'https://www.ebates.com/luxury/all-stores.htm'
     driver = sel_spider(url)
     for e in driver.find_elements_by_xpath('.//ul[@class="store-sort"]/li'):
@@ -50,11 +57,13 @@ def luxury(collection):
         url = e.find_element_by_xpath('./a').get_attribute('href').split('/')
         if 'mytheresa-com' in url: item['url'] = 'mytheresa.com' 
         else: item['url'] =  e.find_element_by_xpath('./a').get_attribute('href').split('/')[-1]
-        item['cashback'] = e.find_elements_by_xpath('./a/span')[1].text.split(' ')[0].strip()
+        item['cashback'] = e.find_elements_by_xpath('./a/span')[1].text.replace('Up to ', '').split(' ')[0].strip()
         collection.insert(item)
-        print item
+        line = item['url'] + ',' + item['cashback'] + '\n'
+        file_h.write(line)
+        print line.strip()
 
-def in_store(collection):
+def in_store(collection, file_h):
     url = 'https://www.ebates.com/in-store.htm'
     driver = sel_spider(url)
     for e in driver.find_elements_by_xpath('.//div[@id="clo-offers-cont"]/div'):
@@ -62,7 +71,9 @@ def in_store(collection):
         item['url'] = e.find_element_by_xpath('./img').get_attribute('title')
         item['cashback'] = e.find_elements_by_xpath('./div')[0].text.split(' ')[0]
         collection.insert(item)
-        print item
+        line = item['url'] + ',' + item['cashback'] + '\n'
+        file_h.write(line)
+        print line.strip()
 
     driver.quit()
 
@@ -72,15 +83,21 @@ def main():
     db = client.ebates
     coll = db.dataset
 
-    double_cash_back(coll)
+    fn = 'ebates_%s.csv'%datetime.now().strftime('%Y_%m_%d')
+    fh = open(fn, 'w')
+    header = 'url,cashback\n'
+    fh.write(header)
+
+    double_cash_back(coll, fh)
     time.sleep(5)
-    hot_deals(coll)
+    hot_deals(coll, fh)
     time.sleep(5)
-    luxury(coll)
+    luxury(coll, fh)
     time.sleep(5)
-    in_store(coll)
+    in_store(coll, fh)
 
     client.close()
+    fh.close()
 
 main()
 
