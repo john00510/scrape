@@ -58,6 +58,7 @@ def luxury(collection, file_h):
         if 'mytheresa-com' in url: item['url'] = 'mytheresa.com' 
         else: item['url'] =  e.find_element_by_xpath('./a').get_attribute('href').split('/')[-1]
         item['cashback'] = e.find_elements_by_xpath('./a/span')[1].text.replace('Up to ', '').split(' ')[0].strip()
+        if item['cashback'] == 'No': continue
         collection.insert(item)
         line = item['url'] + ',' + item['cashback'] + '\n'
         file_h.write(line)
