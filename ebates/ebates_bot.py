@@ -31,8 +31,9 @@ def double_cash_back(collection, file_h):
         item = dict()
         item['url'] = e.xpath('./@href')[0].strip('/')
         item['cashback'] = e.xpath('./span/text()')[1].strip().split(' ')[0]
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         collection.insert(item)
-        line = item['url'] + ',' + item['cashback'] + '\n'
+        line = item['url'] + ',' + item['cashback'] + ',' + item['timestamp'] + '\n'
         file_h.write(line)
         print line.strip()
 
@@ -44,8 +45,9 @@ def hot_deals(collection, file_h):
         item = dict()
         item['url'] = e.xpath('./div[@class="merchlogo flt"]/a/@href')[0].strip('/')
         item['cashback'] = e.xpath('./ul/li/span/text()')[1].split('Cash')[0].strip().strip('+').replace('Up to', '').strip()
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         collection.insert(item)
-        line = item['url'] + ',' + item['cashback'] + '\n'
+        line = item['url'] + ',' + item['cashback'] + ',' + item['timestamp'] + '\n'
         file_h.write(line)
         print line.strip()
 
@@ -58,9 +60,10 @@ def luxury(collection, file_h):
         if 'mytheresa-com' in url: item['url'] = 'mytheresa.com' 
         else: item['url'] =  e.find_element_by_xpath('./a').get_attribute('href').split('/')[-1]
         item['cashback'] = e.find_elements_by_xpath('./a/span')[1].text.replace('Up to ', '').split(' ')[0].strip()
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         if item['cashback'] == 'No': continue
         collection.insert(item)
-        line = item['url'] + ',' + item['cashback'] + '\n'
+        line = item['url'] + ',' + item['cashback'] + ',' + item['timestamp'] + '\n'
         file_h.write(line)
         print line.strip()
 
@@ -71,8 +74,9 @@ def in_store(collection, file_h):
         item = dict()
         item['url'] = e.find_element_by_xpath('./img').get_attribute('title')
         item['cashback'] = e.find_elements_by_xpath('./div')[0].text.split(' ')[0]
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         collection.insert(item)
-        line = item['url'] + ',' + item['cashback'] + '\n'
+        line = item['url'] + ',' + item['cashback'] + ',' + item['timestamp'] + '\n'
         file_h.write(line)
         print line.strip()
 
@@ -84,9 +88,9 @@ def main():
     db = client.ebates
     coll = db.dataset
 
-    fn = 'ebates_%s.csv'%datetime.now().strftime('%Y_%m_%d')
+    fn = 'ebates_%s.csv'%datetime.utcnow().strftime('%Y_%m_%d')
     fh = open(fn, 'w')
-    header = 'url,cashback\n'
+    header = 'url,cashback,date_time\n'
     fh.write(header)
 
     double_cash_back(coll, fh)
