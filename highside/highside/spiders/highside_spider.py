@@ -7,15 +7,16 @@ import logging
 
 class HighsideSpider(Spider):
     name = "highside"
-    allowed_domains = ["stackoverflow.com"]
+    allowed_domains = ["ebates.com"]
     start_urls = [
-        "http://stackoverflow.com/questions?pagesize=50&sort=newest",
+        "http://www.ebates.com",
     ]
 
     def parse(self, response):
 
         logging.log(logging.DEBUG, " ***  in parse with response = {} ".format(response))
-        questions = Selector(response).xpath('//div[@class="summary"]/h3')
+        questions = Selector(response).xpath('//span[@class="now_rebate"]')
+        logging.log(logging.DEBUG, " *** in parse with questions = {}".format(questions))
 
         for question in questions:            
             logging.log(logging.DEBUG, " ***  in parse with question = {} ".format(question))
