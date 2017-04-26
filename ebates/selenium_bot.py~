@@ -1,0 +1,14 @@
+from selenium import webdriver
+import time
+
+driver = webdriver.PhantomJS()
+driver.get('https://www.ebates.com/in-store.htm')
+time.sleep(5)
+for e in driver.find_elements_by_xpath('.//div[@id="clo-offers-cont"]/div'):
+    item = dict()
+    item['url'] = e.find_element_by_xpath('./img').get_attribute('title')
+    item['cashback'] = e.find_elements_by_xpath('./div')[0].text.split(' ')[0]
+    item['category'] = 'in store'
+    print item
+
+driver.quit()
