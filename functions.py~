@@ -2,4 +2,4 @@
 
 def cashback(data):
     if 'off' in data:
-        print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa'
+        print 'AAA'
