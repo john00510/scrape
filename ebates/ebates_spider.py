@@ -1,0 +1,91 @@
+#!/usr/bin/python
+
+from lxml import html
+from datetime import datetime
+import time, sys, os
+sys.path.append(os.path.abspath('').replace('ebates', 'functions'))
+from functions import csv_file, mongo_db, spider, spider_sel, data_cleaner, url_cleaner
+
+
+def double_cash_back(collection, file_h):
+    url = 'https://www.ebates.com/athleisure-deals.htm'
+    response = spider(url)
+    data = html.fromstring(response.text)
+    for e in  data.xpath('.//div[@id="coupons"]/div[contains(@class, "coupon")]'):
+        item = dict()
+        item['url'] = e.xpath('.//a/@href')[0].replace('/', '')
+        item['brand'] = item['url'].split('.')[0].encode('utf8')
+        item['offer'] = e.xpath('.//li[@class="coupon-desc prox-b"]/span/text()')[1].strip().encode('utf8')
+        item['details'] = e.xpath('.//li[@class="coupon-desc prox-b"]/span/text()')[0].strip().encode('utf8')
+        item['cashback'] = data_cleaner(item['offer'], item['details'])
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        collection.insert(item)
+        line = '"%s","%s","%s","%s","%s",%s\n' % (item['brand'], item['cashback'], item['offer'], item['details'], item['url'], item['timestamp'])
+        file_h.write(line)
+
+def hot_deals(collection, file_h):
+    url = 'https://www.ebates.com/deals.htm'
+    response = spider(url)
+    data = html.fromstring(response.text)
+    for e in  data.xpath('.//div[@id="coupons"]/div[contains(@class, "coupon")]'):
+        item = dict()
+        item['url'] = e.xpath('.//a/@href')[0].replace('/', '')
+        item['brand'] = item['url'].split('.')[0].encode('utf8')
+        item['offer'] = e.xpath('.//li[@class="coupon-desc prox-b"]/span/text()')[1].strip().encode('utf8')
+        item['details'] = e.xpath('.//li[@class="coupon-desc prox-b"]/span/text()')[0].strip().encode('utf8')
+        item['cashback'] = data_cleaner(item['offer'], item['details'])
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        collection.insert(item)
+        line = '"%s","%s","%s","%s","%s",%s\n' % (item['brand'], item['cashback'], item['offer'], item['details'], item['url'], item['timestamp'])
+        file_h.write(line)
+
+def luxury(collection, file_h):
+    url = 'https://www.ebates.com/luxury/all-stores.htm'
+    driver = spider_sel(url)
+    for e in driver.find_elements_by_xpath('.//ul[contains(@class, "store-sort")]/li'):
+        item = dict()
+        item['url'] = url_cleaner(e.find_element_by_xpath('./a').get_attribute('href').encode('utf8'))
+        item['details'] = e.find_element_by_xpath('.//img').get_attribute('title').encode('utf8')
+        item['offer'] = e.find_elements_by_xpath('./a/span')[1].text.encode('utf8')
+        item['brand'] = item['url'].split('.')[0].encode('utf8')
+        item['cashback'] = data_cleaner(item['offer'], item['details'])
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        collection.insert(item)
+        line = '"%s","%s","%s","%s","%s",%s\n' % (item['brand'], item['cashback'], item['offer'], item['details'], item['url'], item['timestamp'])
+        file_h.write(line)
+
+def in_store(collection, file_h):
+    url = 'https://www.ebates.com/in-store.htm'
+    driver = spider_sel(url)
+    for e in driver.find_elements_by_xpath('.//div[@id="clo-offers-cont"]/div'):
+        item = dict()
+        item['brand'] = e.find_element_by_xpath('./img').get_attribute('title').encode('utf8')
+        item['url'] = ''
+        item['offer'] = e.find_elements_by_xpath('./div')[0].text.encode('utf8')
+        item['details'] = ''
+        item['cashback'] = data_cleaner(item['offer'], item['details'])
+        item['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        collection.insert(item)
+        line = '"%s","%s","%s","%s","%s",%s\n' % (item['brand'], item['cashback'], item['offer'], item['details'], item['url'], item['timestamp'])
+        file_h.write(line)
+
+    driver.quit()
+
+def main():
+    fn = 'ebates'
+    fh = csv_file(fn)
+    client, coll = mongo_db()
+
+    double_cash_back(coll, fh)
+    time.sleep(5)
+    hot_deals(coll, fh)
+    time.sleep(5)
+    luxury(coll, fh)
+    time.sleep(5)
+    in_store(coll, fh)
+
+    client.close()
+    fh.close()
+
+main()
+
