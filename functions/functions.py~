@@ -99,9 +99,6 @@ def diff(row, number):
         else:
             row['difference'] = None
 
-    if '¢' in row['cashback_x']:
-        pass
-
     return row
 
 

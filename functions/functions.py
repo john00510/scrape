@@ -86,18 +86,18 @@ def diff(row, number):
         cashback_h = cell_proc1(row['cashback_y'])
         dif = cashback_t - cashback_h
         if dif >= number:
-            row['difference'] = str(dif) + '%'
+            row['diff'] = str(dif) + '%'
         else:
-            row['difference'] = None
+            row['diff'] = None
 
     if '$' in row['cashback_x']:
         cashback_t = cell_proc2(row['cashback_x'])
         cashback_h = cell_proc2(row['cashback_y'])
         dif = cashback_t/(cashback_h/100) - 100
         if dif >= number:
-            row['difference'] = str(dif) + '%'
+            row['diff'] = str(dif) + '%'
         else:
-            row['difference'] = None
+            row['diff'] = None
 
     return row
 
