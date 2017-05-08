@@ -35,11 +35,11 @@ def read_db(coll):
 def read_df(data_t, data_h, fh, pers):
     df_t = pd.DataFrame(list(data_t)).drop(['_id', 'timestamp'], axis=1).drop_duplicates(subset=['brand', 'source', 'offer', 'details', 'url'])
     df_h = pd.DataFrame(list(data_h)).drop(['_id', 'timestamp'], axis=1).drop_duplicates(subset=['brand', 'source', 'offer', 'details', 'url'])
-    print len(df_t)
-    print len(df_h)
+    print "today's data:", len(df_t)
+    print "historical data:", len(df_h)
     df_n = pd.merge(df_t, df_h, how='inner', left_on=['brand', 'source', 'offer', 'details', 'url'], right_on=['brand', 'source', 'offer', 'details', 'url'])
     df_n = df_n[df_n['cashback_x']!=''].apply(lambda x: diff(x, pers), axis=1).dropna()
-    print len(df_n)
+    print "report data:", len(df_n)
     for i, r in df_n.iterrows():
         line = '"%s","%s","%s","%s","%s","%s","%s","%s"\n' % (r['brand'], r['cashback_x'], r['cashback_y'], r['diff'], r['offer'], r['details'], r['url'], r['source'])
         fh.write(line.encode('utf8'))
